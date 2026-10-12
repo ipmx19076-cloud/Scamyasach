@@ -1,29 +1,36 @@
 "use client";
 
 import { useIsClient } from "../lib/prefs";
-import { Home } from "./Home";
+import { Checker } from "./Checker";
+import { GameHome } from "./GameHome";
 import { Play } from "./Play";
 import { Safety } from "./Safety";
 
-export type Screen = "home" | "daily" | "practice" | "safety";
+export type Screen = "home" | "game" | "daily" | "practice" | "safety";
 
 interface Props {
   screen: Screen;
   go: (screen: Screen) => void;
-  /** Link included in shared results. */
+  /** Link included in shared game results. */
   shareUrl: () => string;
+  /** AI check endpoint, or null for the pattern check only (offline copy). */
+  checkUrl: string | null;
 }
 
 /**
- * The whole game. Routing is passed in, so the same component runs inside
+ * The whole app. Routing is passed in, so the same component runs inside
  * Next.js (real URLs) and in the single-file standalone build (in-memory).
  */
-export function App({ screen, go, shareUrl }: Props) {
+export function App({ screen, go, shareUrl, checkUrl }: Props) {
   const isClient = useIsClient();
 
   switch (screen) {
     case "home":
-      return <Home onDaily={() => go("daily")} onPractice={() => go("practice")} onSafety={() => go("safety")} />;
+      return <Checker checkUrl={checkUrl} onGame={() => go("game")} onSafety={() => go("safety")} />;
+    case "game":
+      return (
+        <GameHome onDaily={() => go("daily")} onPractice={() => go("practice")} onSafety={() => go("safety")} onCheck={() => go("home")} />
+      );
     case "safety":
       return <Safety onHome={() => go("home")} onDaily={() => go("daily")} />;
     case "daily":
@@ -34,7 +41,7 @@ export function App({ screen, go, shareUrl }: Props) {
         <Play
           key={screen}
           mode={screen}
-          onHome={() => go("home")}
+          onHome={() => go("game")}
           onPractice={() => go("practice")}
           onSafety={() => go("safety")}
           shareUrl={shareUrl}

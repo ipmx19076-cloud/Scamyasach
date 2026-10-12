@@ -14,11 +14,13 @@
     "check": "npm run lint && npm run typecheck && npm run test"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.133.0",
     "@fontsource/baloo-2": "^5.3.0",
     "@fontsource/hind": "^5.3.0",
     "next": "^16.4.0",
     "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+    "react-dom": "^19.3.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.3.3",

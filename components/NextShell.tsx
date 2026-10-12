@@ -5,6 +5,7 @@ import { App, type Screen } from "./App";
 
 const PATH: Record<Screen, string> = {
   home: "/",
+  game: "/game",
   daily: "/play/daily",
   practice: "/play/practice",
   safety: "/safety",
@@ -19,7 +20,8 @@ export function NextShell({ screen }: { screen: Screen }) {
         router.push(PATH[s]);
         window.scrollTo(0, 0);
       }}
-      shareUrl={() => window.location.origin}
+      shareUrl={() => `${window.location.origin}/game`}
+      checkUrl="/api/check"
     />
   );
 }

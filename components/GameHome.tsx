@@ -9,9 +9,10 @@ interface Props {
   onDaily: () => void;
   onPractice: () => void;
   onSafety: () => void;
+  onCheck: () => void;
 }
 
-export function Home({ onDaily, onPractice, onSafety }: Props) {
+export function GameHome({ onDaily, onPractice, onSafety, onCheck }: Props) {
   const dailyState = useStored(() => {
     const rec = loadDaily(istDateKey());
     return rec ? (rec.done ? "done" : "started") : "new";
@@ -19,7 +20,10 @@ export function Home({ onDaily, onPractice, onSafety }: Props) {
 
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-4 pt-4 pb-8">
-      <div className="flex justify-end">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <button type="button" onClick={onCheck} className="h-10 rounded-full border border-line px-3 text-sm text-muted hover:text-ink">
+          Check a real message
+        </button>
         <Toggles />
       </div>
 
@@ -72,7 +76,7 @@ export function Home({ onDaily, onPractice, onSafety }: Props) {
       </div>
 
       <p className="mt-6 text-center text-xs text-muted">
-        All messages are invented training examples. Nothing you do here is stored or sent anywhere.
+        All game messages are invented training examples. Your game progress stays on this device.
       </p>
     </div>
   );

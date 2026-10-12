@@ -11,9 +11,9 @@ import "@fontsource/hind/700.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Scam Ya Sach? Spot the fraud in 2 minutes",
+  title: "Scam Ya Sach? Check if a message is a scam",
   description:
-    "A quick phone game: swipe left on scams, right on genuine messages. Learn to spot UPI, SMS, WhatsApp and phone-call fraud.",
+    "Paste an SMS, WhatsApp, email or UPI request you received and find out if it is a scam, with the red flags highlighted. Plus a 2-minute game to train your eye.",
 };
 
 export const viewport: Viewport = {

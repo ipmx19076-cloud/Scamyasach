@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { App, type Screen } from "../components/App";
 
-const SCREENS: Screen[] = ["home", "daily", "practice", "safety"];
+const SCREENS: Screen[] = ["home", "game", "daily", "practice", "safety"];
 
 function fromHash(): Screen {
   const h = window.location.hash.replace("#", "") as Screen;
@@ -33,7 +33,8 @@ function Standalone() {
         setScreen(s);
         window.scrollTo(0, 0);
       }}
-      shareUrl={() => window.location.href.split("#")[0]}
+      shareUrl={() => `${window.location.href.split("#")[0]}#game`}
+      checkUrl={null}
     />
   );
 }
