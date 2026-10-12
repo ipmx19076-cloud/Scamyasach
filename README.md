@@ -10,18 +10,29 @@ Built as a course project for the Executive MBA at IIM Lucknow.
 
 1. **Privacy first, on the phone.** Before anything is sent, the app hides one-time codes (`[code]`), account and card numbers (`[number]`), and partly masks phone numbers.
 2. **Pattern check.** A built-in rule set (`lib/rules.ts`) looks for classic Indian scam signs: entering a UPI PIN to "receive" money, OTP requests, KYC links, .apk files, screen-sharing apps, "digital arrest", fees to claim prizes or parcels, guaranteed returns, task jobs, threats and urgency.
-3. **AI check.** The server route `/api/check` asks Claude (through the Anthropic API) to judge the message and quote the exact words that are red flags. The answer is validated; any quote that isn't really in the message is dropped.
+3. **AI check.** The server route `/api/check` asks an AI model (OpenAI or Claude, whichever key you set) to judge the message and quote the exact words that are red flags. The answer is validated; any quote that isn't really in the message is dropped.
 4. **Combined verdict.** If the AI calls a message genuine but the pattern check found a serious red flag, the verdict becomes "suspicious" and the reason is shown.
 5. **Fallback.** If the API key is missing, the API fails, or the phone is offline, the app still answers using the pattern check and says so.
 
-Messages are never stored or logged. The result always includes what to do next, and for scams, the 1930 helpline and cybercrime.gov.in.
+Messages are never stored or logged by the app. The result always includes what to do next, and for scams, the 1930 helpline and cybercrime.gov.in.
 
 ## Set up the AI check
 
-1. Create an API key at https://console.anthropic.com.
-2. In Vercel, open your project, go to **Settings → Environment Variables**, add `ANTHROPIC_API_KEY` with your key, and redeploy.
+The checker works with **either** an OpenAI key or an Anthropic (Claude) key.
+
+1. In Vercel, open your project, go to **Settings → Environment Variables**, and add one of:
+   - `OPENAI_API_KEY` (from platform.openai.com), or
+   - `ANTHROPIC_API_KEY` (from console.anthropic.com).
+2. Redeploy so the new variable takes effect.
 3. For local development, copy `.env.example` to `.env.local` and put the key there. `.env.local` is git-ignored.
-4. Optional: set `CHECK_MODEL` to choose the model. The default is `claude-sonnet-5-5`; `claude-haiku-5-5` is cheaper and faster.
+
+Optional settings:
+
+| Variable | What it does | Default |
+|---|---|---|
+| `OPENAI_MODEL` | OpenAI model to use (must support structured outputs) | `gpt-4o-mini` |
+| `CHECK_MODEL` | Claude model to use | `claude-sonnet-5-5` |
+| `AI_PROVIDER` | Force `openai` or `anthropic` when both keys are set | Anthropic if its key is set |
 
 The route has a simple per-IP limit (8 checks a minute) to protect your API bill during a public demo.
 
@@ -66,7 +77,7 @@ The content tests make sure every highlighted phrase really appears in its messa
    git push -u origin main
    ```
 2. In Vercel, choose **Add New → Project**, import the repository, and keep the defaults (framework: Next.js).
-3. Add `ANTHROPIC_API_KEY` (see above) and deploy.
+3. Add `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` (see above) and deploy.
 4. For the class demo, put the URL of `/play/daily` in a QR code so everyone lands straight on the Daily Challenge, and demo the checker on `/`.
 
 ## Single-file version

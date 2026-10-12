@@ -16,7 +16,7 @@ Common Indian scam patterns to know: fake KYC/PAN update links, UPI collect requ
 The app hides private numbers before you see the message: "[code]" replaced a one-time code, "[number]" replaced an account or card number, and phone numbers are partly shown as X's. These replacements are not suspicious in themselves.
 
 Output rules:
-- Call the report_verdict tool exactly once.
+- Give your answer once, in the report_verdict format.
 - Every quote must be copied exactly, character for character, from the message (or the sender line), and should be short (a phrase, not the whole message).
 - summary: one or two short sentences a non-expert understands. No jargon.
 - what_to_do: two to four short, practical steps for this exact message. For scams, include stopping all contact and, if money or details were already shared, calling 1930 (India's cyber crime helpline) and reporting at cybercrime.gov.in.
@@ -65,6 +65,37 @@ export const VERDICT_TOOL = {
   },
 };
 
+/**
+ * The same schema in the stricter form OpenAI's structured outputs need:
+ * every field required, no extra fields, no array length limits (those are
+ * enforced afterwards), and nullable instead of optional.
+ */
+export function strictSchema(): Record<string, unknown> {
+  const item = (desc: string) => ({
+    type: "object",
+    properties: {
+      quote: { type: "string", description: "Exact text copied from the message or sender." },
+      why: { type: "string", description: desc },
+    },
+    required: ["quote", "why"],
+    additionalProperties: false,
+  });
+  return {
+    type: "object",
+    properties: {
+      verdict: { type: "string", enum: ["scam", "suspicious", "likely_genuine"] },
+      confidence: { type: "string", enum: ["low", "medium", "high"] },
+      scam_type: { type: ["string", "null"], description: "Short name of the scam type, or null if genuine." },
+      summary: { type: "string", description: "One or two short sentences in plain English." },
+      red_flags: { type: "array", items: item("One short sentence on why this is a warning sign.") },
+      safe_signs: { type: "array", items: item("One short sentence on why this suggests it is genuine.") },
+      what_to_do: { type: "array", items: { type: "string" } },
+    },
+    required: ["verdict", "confidence", "scam_type", "summary", "red_flags", "safe_signs", "what_to_do"],
+    additionalProperties: false,
+  };
+}
+
 const CHANNEL_NAME: Record<CheckChannel, string> = {
   sms: "SMS",
   whatsapp: "WhatsApp message",
@@ -88,5 +119,5 @@ ${text}
 An automated keyword check (which can be wrong both ways) matched:
 ${hints}
 
-Judge the message and call report_verdict.`;
+Judge the message and give your report_verdict.`;
 }

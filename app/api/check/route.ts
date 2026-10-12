@@ -1,16 +1,13 @@
-import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { AiVerdict, CheckRequest, mergeResults, patternResult, type CheckResult } from "../../../lib/check";
-import { SYSTEM_PROMPT, VERDICT_TOOL, userPrompt } from "../../../lib/prompt";
+import { userPrompt } from "../../../lib/prompt";
+import { ProviderError, askAnthropic, askOpenAI, pickProvider, trimAnswer } from "../../../lib/providers";
 import { redact } from "../../../lib/redact";
 import { checkPatterns } from "../../../lib/rules";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
-
-// The model can be changed in Vercel without touching code.
-const MODEL = process.env.CHECK_MODEL || "claude-sonnet-5-5";
 
 /*
  * Simple per-IP rate limit so a public demo can't run up the API bill.
@@ -51,37 +48,28 @@ export async function POST(req: Request): Promise<NextResponse> {
   const sender = redact(parsed.data.sender).text;
   const patterns = checkPatterns(text, sender);
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
+  const provider = pickProvider();
+  if (!provider) {
     return NextResponse.json(
       patternResult(text, sender, "The AI check isn’t set up on this server yet, so this result is from the pattern check only.", patterns),
     );
   }
 
-  const client = new Anthropic({ apiKey, timeout: 25_000, maxRetries: 1 });
+  const ask = provider === "anthropic" ? askAnthropic : askOpenAI;
+  const prompt = userPrompt(text, sender, parsed.data.channel, patterns);
 
   for (let attempt = 1; attempt <= 2; attempt++) {
     try {
-      const res = await client.messages.create({
-        model: MODEL,
-        max_tokens: 1200,
-        system: SYSTEM_PROMPT,
-        tools: [VERDICT_TOOL],
-        tool_choice: { type: "tool", name: VERDICT_TOOL.name },
-        messages: [{ role: "user", content: userPrompt(text, sender, parsed.data.channel, patterns) }],
-      });
-      const block = res.content.find((b) => b.type === "tool_use");
-      const verdict = AiVerdict.safeParse(block && "input" in block ? block.input : null);
+      const verdict = AiVerdict.safeParse(trimAnswer(await ask(prompt)));
       if (!verdict.success) {
         // Invalid shape: retry once, then fall back. Never log the message itself.
-        console.warn(`check: invalid model output (attempt ${attempt})`);
+        console.warn(`check: invalid ${provider} output (attempt ${attempt})`);
         continue;
       }
       const result: CheckResult = mergeResults(verdict.data, patterns, text, sender);
       return NextResponse.json(result);
     } catch (err) {
-      const status = err instanceof Anthropic.APIError ? err.status : undefined;
-      console.warn(`check: AI call failed (status ${status ?? "none"})`);
+      console.warn(`check: ${provider} call failed (status ${err instanceof ProviderError ? (err.status ?? "none") : "unknown"})`);
       break;
     }
   }
